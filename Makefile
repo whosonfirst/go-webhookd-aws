@@ -16,7 +16,7 @@ build:	fmt bin
 
 deps:   
 	@GOPATH=$(GOPATH) go get -u "github.com/whosonfirst/go-webhookd"
-	@GOPATH=$(shell pwd) go get -u "github.com/aws/aws-lambda-go/..."
+	@GOPATH=$(GOPATH) go get -u "github.com/whosonfirst/algnhsa"
 
 vendor-deps: rmdeps deps
 	if test ! -d vendor; then mkdir vendor; fi
@@ -26,8 +26,8 @@ vendor-deps: rmdeps deps
 	rm -rf src
 
 fmt:
-	# go fmt *.go
+	go fmt cmd/*.go
 
 bin: 	rmdeps self
-	# @GOPATH=$(shell pwd) go build -o bin/webhookd cmd/webhookd.go
+	@GOPATH=$(shell pwd) go build -o bin/webhookd-lambda cmd/webhookd-lambda.go
 
