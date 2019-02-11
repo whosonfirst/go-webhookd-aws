@@ -1,32 +1,34 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"github.com/whosonfirst/algnhsa"
 	"github.com/whosonfirst/go-webhookd/config"
 	"github.com/whosonfirst/go-webhookd/daemon"
 	"log"
 	"net/http"
-	_ "os"
+	"os"
 )
 
 func main() {
 
-	var cfg = flag.String("config", "", "Path to a valid webhookd config file")
-
 	flag.Parse()
+	
+	str_cfg, ok := os.LookupEnv("WEBHOOKD_CONFIG")
 
-	if *cfg == "" {
-		log.Fatal("Missing config file")
+	if !ok{
+		log.Fatal("Missing WEBHOOKD_CONFIG environment variable")
 	}
 
-	wh_config, err := config.NewConfigFromFile(*cfg)
-
+	cfg := config.WebhookConfig{}
+	err := json.Unmarshal([]byte(str_cfg), &cfg)
+	
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	d, err := daemon.NewWebhookDaemonFromConfig(wh_config)
+	d, err := daemon.NewWebhookDaemonFromConfig(&cfg)
 
 	if err != nil {
 		log.Fatal(err)
