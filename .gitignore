@@ -3,3 +3,5 @@ pkg
 src
 !vendor/src
 *.json
+bin
+!bin/.gitignore
