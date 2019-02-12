@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/whosonfirst/go-webhookd/config"	
+	"github.com/whosonfirst/go-webhookd/config"
 	"io/ioutil"
 	"log"
 	"os"
@@ -32,11 +32,11 @@ func main() {
 
 		cfg := config.WebhookConfig{}
 		err = json.Unmarshal(body, &cfg)
-		
+
 		if err != nil {
 			log.Fatal(err)
 		}
-		
+
 		enc, err := json.Marshal(cfg)
 
 		if err != nil {

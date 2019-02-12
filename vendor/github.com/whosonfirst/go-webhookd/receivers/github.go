@@ -15,7 +15,7 @@ import (
 	"github.com/whosonfirst/go-webhookd"
 	"github.com/whosonfirst/go-webhookd/github"
 	"io/ioutil"
-	_ "log"
+	"log"
 	"net/http"
 )
 
@@ -48,6 +48,8 @@ func (wh GitHubReceiver) Receive(req *http.Request) ([]byte, *webhookd.WebhookEr
 
 	event_type := req.Header.Get("X-GitHub-Event")
 
+	log.Println("EVENT TYPE", event_type)
+	
 	if event_type == "" {
 
 		code := http.StatusBadRequest
@@ -68,6 +70,11 @@ func (wh GitHubReceiver) Receive(req *http.Request) ([]byte, *webhookd.WebhookEr
 		return nil, err
 	}
 
+	if event_type == "ping" {
+		err := &webhookd.WebhookError{Code: -1, Message: "ping message is a no-op"}
+		return nil, err
+	}
+	
 	body, err := ioutil.ReadAll(req.Body)
 
 	if err != nil {
@@ -97,6 +104,8 @@ func (wh GitHubReceiver) Receive(req *http.Request) ([]byte, *webhookd.WebhookEr
 		err := json.Unmarshal(body, &event)
 
 		if err != nil {
+			log.Println("WHAT", err)
+			log.Println("BODY", string(body))
 			err := &webhookd.WebhookError{Code: 999, Message: err.Error()}
 			return nil, err
 		}

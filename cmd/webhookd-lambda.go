@@ -14,16 +14,16 @@ import (
 func main() {
 
 	flag.Parse()
-	
+
 	str_cfg, ok := os.LookupEnv("WEBHOOKD_CONFIG")
 
-	if !ok{
+	if !ok {
 		log.Fatal("Missing WEBHOOKD_CONFIG environment variable")
 	}
 
 	cfg := config.WebhookConfig{}
 	err := json.Unmarshal([]byte(str_cfg), &cfg)
-	
+
 	if err != nil {
 		log.Fatal(err)
 	}

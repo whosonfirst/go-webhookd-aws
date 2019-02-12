@@ -183,6 +183,10 @@ func (d *WebhookDaemon) HandlerFunc() (http.HandlerFunc, error) {
 
 		body, err := rcvr.Receive(req)
 
+		if err != nil && err.Code == -1 {
+			return
+		}
+
 		if err != nil {
 			http.Error(rsp, err.Error(), err.Code)
 			return
