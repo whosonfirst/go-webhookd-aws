@@ -30,4 +30,12 @@ fmt:
 
 bin: 	rmdeps self
 	@GOPATH=$(shell pwd) go build -o bin/webhookd-lambda cmd/webhookd-lambda.go
+	@GOPATH=$(shell pwd) go build -o bin/webhookd-config cmd/webhookd-config.go
 
+lambda:
+	@make self
+	if test -f main; then rm -f main; fi
+	if test -f webhookd.zip; then rm -f webhookd.zip; fi
+	@GOPATH=$(GOPATH) GOOS=linux go build -o main cmd/webhookd-lambda.go
+	zip webhookd.zip main
+	rm -f main
