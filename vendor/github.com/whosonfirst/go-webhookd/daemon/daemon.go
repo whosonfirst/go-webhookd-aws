@@ -183,6 +183,10 @@ func (d *WebhookDaemon) HandlerFunc() (http.HandlerFunc, error) {
 
 		body, err := rcvr.Receive(req)
 
+		// we use -1 to signal that this is an unhandled event but
+		// not an error, for example when github sends a ping message
+		// (20190212/thisisaaronland)
+
 		if err != nil && err.Code == -1 {
 			return
 		}

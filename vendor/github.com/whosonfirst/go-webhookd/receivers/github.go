@@ -1,8 +1,5 @@
 package receivers
 
-// This has not been fully tested with an actual GitHub message yet
-// (20161016/thisisaaronland)
-
 // https://developer.github.com/webhooks/
 // https://developer.github.com/webhooks/#payloads
 // https://developer.github.com/v3/activity/events/types/#pushevent
@@ -15,7 +12,7 @@ import (
 	"github.com/whosonfirst/go-webhookd"
 	"github.com/whosonfirst/go-webhookd/github"
 	"io/ioutil"
-	"log"
+	_ "log"
 	"net/http"
 )
 
@@ -48,8 +45,6 @@ func (wh GitHubReceiver) Receive(req *http.Request) ([]byte, *webhookd.WebhookEr
 
 	event_type := req.Header.Get("X-GitHub-Event")
 
-	log.Println("EVENT TYPE", event_type)
-	
 	if event_type == "" {
 
 		code := http.StatusBadRequest
@@ -74,7 +69,10 @@ func (wh GitHubReceiver) Receive(req *http.Request) ([]byte, *webhookd.WebhookEr
 		err := &webhookd.WebhookError{Code: -1, Message: "ping message is a no-op"}
 		return nil, err
 	}
-	
+
+	// remember that you want to configure GitHub to send webhooks as 'application/json'
+	// or all this code will get confused (20190212/thisisaaronland)
+
 	body, err := ioutil.ReadAll(req.Body)
 
 	if err != nil {
@@ -104,8 +102,6 @@ func (wh GitHubReceiver) Receive(req *http.Request) ([]byte, *webhookd.WebhookEr
 		err := json.Unmarshal(body, &event)
 
 		if err != nil {
-			log.Println("WHAT", err)
-			log.Println("BODY", string(body))
 			err := &webhookd.WebhookError{Code: 999, Message: err.Error()}
 			return nil, err
 		}
