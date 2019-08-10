@@ -29,7 +29,7 @@ A helper utility for encoding a valid webhookd config file in to a string that c
 
 ### webhookd-lambda
 
-This will run `webhookd` HTTP daemon as a Lambda function. In order to use it you will need to configure an AWS API Gateway endpoint.
+This will run `webhookd` HTTP daemon as a Lambda function. In order to use it you will need to configure an AWS API Gateway endpoint, which is discussed below.
 
 #### Roles
 
