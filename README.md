@@ -234,6 +234,7 @@ Your config file should look like this, albeit with specific secrets and endpoin
 In the "Webhooks settings" page for your GitHub repository in question you'll want to plug in the following:
 
 | Key | Value |
+| --- | --- |
 | Payload URL | https://EXAMPLE.execute-api.us-east-1.amazonaws.com/STAGE/ENDPOINT |
 | Content type | application/json |
 | Secret | S33KRET |
