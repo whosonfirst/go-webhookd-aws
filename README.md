@@ -40,7 +40,7 @@ Your Lambda function will need to run using a role with the following built-in A
 #### Environment variables
 
 | Key | Value |
-| --- | --- | --- |
+| --- | --- |
 | WEBHOOKD_CONFIG | A valid JSON encoded `webhookd` config file | 
 
 Including a big honking string here is not ideal, it's just how it is today. For now you'll just have to use the `webhookd-flatten-config` tool described above.
