@@ -95,7 +95,7 @@ And an AWS Lambda test event configured to act like an AWS API Gateway Proxy eve
   "httpMethod": "POST",
   "isBase64Encoded": false,
   "pathParameters": {
-    "proxy": "/cnSkGhLKpLqTWYOKpEmdLeljtYMeIlTPmFONZcSNGSGotFBPMSGBfgjzOwlTKaMM"
+    "proxy": "/insecure"
   },
   "headers": {
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
