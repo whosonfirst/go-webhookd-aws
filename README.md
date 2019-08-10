@@ -43,8 +43,6 @@ Your Lambda function will need to run using a role with the following built-in A
 | --- | --- | --- |
 | WEBHOOKD_CONFIG | A valid JSON encoded `webhookd` config file | 
 
-For details on `webhookd` config file please consult the [go-webhookd documentation](https://github.com/whosonfirst/go-webhookd#config-files).
-
 Including a big honking string here is not ideal, it's just how it is today. Really this should be stored in something like the AWS Secrets Manager but that will have to be "tomorrow's problem".
 
 For example, let's start with a config file that looks like this:
@@ -84,6 +82,8 @@ For example, let's start with a config file that looks like this:
 	]
 }
 ```
+
+For details on `webhookd` config file please consult the [go-webhookd documentation](https://github.com/whosonfirst/go-webhookd#config-files).
 
 And an AWS Lambda test event configured to act like an AWS API Gateway Proxy event like this:
 
