@@ -43,9 +43,7 @@ Your Lambda function will need to run using a role with the following built-in A
 | --- | --- |
 | WEBHOOKD_CONFIG | A valid JSON encoded `webhookd` config file | 
 
-Including a big honking string here is not ideal, it's just how it is today. For now you'll just have to use the `webhookd-flatten-config` tool described above.
-
-Really, this should be stored in something like the AWS Secrets Manager but that will have to be "tomorrow's problem".
+Including a big honking string here is not ideal, it's just how it is today. For now you'll just have to use the `webhookd-flatten-config` tool described above. Really, this should be stored in something like the AWS Secrets Manager but that will have to be "tomorrow's problem".
 
 For example, let's start with a config file that looks like this:
 
@@ -211,7 +209,7 @@ Your config file should look like this, albeit with specific secrets and endpoin
 			"name": "GitHubRepo",
 			"exclude_additions": false,
 			"exclude_modifications": false,
-			"exclude_deletions": false
+			"exclude_deletions": true
 		}				
 		
 	},
@@ -241,6 +239,11 @@ In the "Webhooks settings" page for your GitHub repository in question you'll wa
 
 Where things like `EXAMPLE` and `ENDPOINT` and especially `S33KRET` are specific to your application.
 
+In this example we have configured the [GitHub "receiver"](https://github.com/whosonfirst/go-webhookd#github) to only pay attention to things that have been committed to the `master` branch and we have configured the [GitHubRepo "transformer"](https://github.com/whosonfirst/go-webhookd#githubrepo) to ignore any deletion events (in the commit).
+
+As with the other examples we're "dispatching" everything to the ["log" dispatcher](https://github.com/whosonfirst/go-webhookd#log) so the output would like something like this:
+
+![](docs/images/github-repo-log.png)
 
 ### webhookd-lambda-task
 
