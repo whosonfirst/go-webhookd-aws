@@ -31,14 +31,6 @@ A helper utility for encoding a valid webhookd config file in to a string that c
 
 This will run `webhookd` HTTP daemon as a Lambda function. In order to use it you will need to configure an AWS API Gateway endpoint.
 
-### webhookd-lambda-task
-
-This is a Lambda function to run an ECS task when invoked. It is principally meant to be used with the `go-webhookd` Lambda dispatcher. It should probably be renamed since it's pretty confusing, even for me.
-
-## AWS
-
-### Lambda
-
 #### Roles
 
 Your Lambda function will need to run using a role with the following built-in AWS policies:
@@ -141,9 +133,13 @@ Specifically the string `hello world` was received by the "insecure" receiver, t
 
 For details on receivers, transformers and dispatchers please consult the main [go-webhookd documentation](https://github.com/whosonfirst/go-webhookd/blob/master/README.md).
 
-### API Gateway
+#### API Gateway
 
 _Please write me_
+
+### webhookd-lambda-task
+
+This is a Lambda function to run an ECS task when invoked. It is principally meant to be used with the `go-webhookd` Lambda dispatcher. It should probably be renamed since it's pretty confusing, even for me.
 
 ## See also
 
