@@ -59,7 +59,7 @@ For example, let's start with a config file that looks like this:
 
 ```
 {
-    "daemon": {
+    	"daemon": {
 		"protocol": "http",
 		"host": "localhost",
 		"port": 8080
@@ -99,7 +99,7 @@ And an AWS Lambda test event configured to act like an AWS API Gateway Proxy eve
 {
   "body": "hello world",
   "resource": "/{proxy+}",
-  "path": "/cnSkGhLKpLqTWYOKpEmdLeljtYMeIlTPmFONZcSNGSGotFBPMSGBfgjzOwlTKaMM",
+  "path": "/insecure",
   "httpMethod": "POST",
   "isBase64Encoded": false,
   "pathParameters": {
@@ -138,6 +138,8 @@ REPORT RequestId: 5c237ed9-f03f-407f-acaa-433625aa6950	Duration: 3.14 ms	Billed 
 ```
 
 Specifically the string `hello world` was received by the "insecure" receiver, transformed in to `🐔 🐔` by the "chicken" transformer and distpatched to STDOUT (or in the case of AWS to CloudWatch) using the "log" dispatcher.
+
+For details on receivers, transformers and dispatchers please consult the main [go-webhookd documentation](https://github.com/whosonfirst/go-webhookd/blob/master/README.md).
 
 ### API Gateway
 
