@@ -249,6 +249,8 @@ As with the other examples we're "dispatching" everything to the ["log" dispatch
 
 This is a Lambda function to run an ECS task when invoked. It is principally meant to be used with the `go-webhookd` Lambda dispatcher. It should probably be renamed since it's pretty confusing, even for me.
 
+_The documentation for this tool is still being written..._
+
 ## See also
 
 * https://github.com/whosonfirst/go-webhookd
