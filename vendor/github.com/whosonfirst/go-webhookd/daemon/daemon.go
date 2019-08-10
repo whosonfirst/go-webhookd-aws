@@ -7,6 +7,7 @@ import (
 	"github.com/whosonfirst/go-webhookd/config"
 	"github.com/whosonfirst/go-webhookd/dispatchers"
 	"github.com/whosonfirst/go-webhookd/receivers"
+	"github.com/whosonfirst/go-webhookd/server"
 	"github.com/whosonfirst/go-webhookd/transformations"
 	"github.com/whosonfirst/go-webhookd/webhook"
 	"log"
@@ -17,36 +18,48 @@ import (
 )
 
 type WebhookDaemon struct {
-	host     string
-	port     int
-	webhooks map[string]webhookd.WebhookHandler
+	server     server.Server
+	webhooks   map[string]webhookd.WebhookHandler
+	AllowDebug bool
 }
 
 func NewWebhookDaemonFromConfig(cfg *config.WebhookConfig) (*WebhookDaemon, error) {
 
-	d, err := NewWebhookDaemon(cfg.Daemon.Host, cfg.Daemon.Port)
+	d, err := NewWebhookDaemon(cfg.Daemon.Protocol, cfg.Daemon.Host, cfg.Daemon.Port)
 
 	if err != nil {
+		log.Println("WTF 1", err)
 		return nil, err
 	}
 
 	err = d.AddWebhooksFromConfig(cfg)
 
 	if err != nil {
+		log.Println("WTF 2", err)
 		return nil, err
 	}
+
+	d.AllowDebug = cfg.Daemon.AllowDebug
 
 	return d, nil
 }
 
-func NewWebhookDaemon(host string, port int) (*WebhookDaemon, error) {
+func NewWebhookDaemon(protocol string, host string, port int) (*WebhookDaemon, error) {
+
+	addr := fmt.Sprintf("%s://%s:%d", protocol, host, port)
+
+	srv, err := server.NewServerFromString(addr)
+
+	if err != nil {
+		return nil, err
+	}
 
 	webhooks := make(map[string]webhookd.WebhookHandler)
 
 	d := WebhookDaemon{
-		host:     host,
-		port:     port,
-		webhooks: webhooks,
+		server:     srv,
+		webhooks:   webhooks,
+		AllowDebug: false,
 	}
 
 	return &d, nil
@@ -240,9 +253,6 @@ func (d *WebhookDaemon) HandlerFunc() (http.HandlerFunc, error) {
 					ch <- err
 				}
 
-				// err = &webhookd.WebhookError{Code: 000, Message: "o_O"}
-				// ch <- err
-
 			}(d, body)
 		}
 
@@ -278,13 +288,16 @@ func (d *WebhookDaemon) HandlerFunc() (http.HandlerFunc, error) {
 		rsp.Header().Set("X-Webhookd-Time-To-Dispatch", fmt.Sprintf("%v", ttd))
 		rsp.Header().Set("X-Webhookd-Time-To-Process", fmt.Sprintf("%v", t2))
 
-		query := req.URL.Query()
-		debug := query.Get("debug")
+		if d.AllowDebug {
 
-		if debug != "" {
-			rsp.Header().Set("Content-Type", "text/plain")
-			rsp.Header().Set("Access-Control-Allow-Origin", "*")
-			rsp.Write(body)
+			query := req.URL.Query()
+			debug := query.Get("debug")
+
+			if debug != "" {
+				rsp.Header().Set("Content-Type", "text/plain")
+				rsp.Header().Set("Access-Control-Allow-Origin", "*")
+				rsp.Write(body)
+			}
 		}
 
 		return
@@ -301,13 +314,14 @@ func (d *WebhookDaemon) Start() error {
 		return err
 	}
 
-	addr := fmt.Sprintf("%s:%d", d.host, d.port)
-	log.Printf("webhookd listening for requests on %s\n", addr)
-
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", handler)
 
-	err = http.ListenAndServe(addr, mux)
+	svr := d.server
+
+	log.Printf("webhookd listening for requests on %s\n", svr.Address())
+
+	err = svr.ListenAndServe(mux)
 
 	if err != nil {
 		return err

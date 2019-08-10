@@ -12,10 +12,10 @@ In between (receivers and dispatchers) are an optional chain of transformations 
 
 ## Install
 
-You will need to have both `Go` and the `make` programs installed on your computer. Assuming you do just type:
+You will need to have both `Go` (specifically version [1.12](https://golang.org/dl) or higher) and the `make` programs installed on your computer. Assuming you do just type:
 
 ```
-make bin
+make tools
 ```
 
 All of this package's dependencies are bundled with the code in the `vendor` directory.
@@ -32,6 +32,77 @@ Usage of ./bin/webhookd:
 ```
 
 `webhookd` is an HTTP daemon for handling webhook requests. Individual webhook endpoints (and how they are processed) are defined in a [config file](#config-files) that is read at start-up time.
+
+#### Example
+
+This is a deliberately juvenile example, just to keep things simple. 
+
+Let's assume an insecure receiver with debugging enabled that reads input,
+transforms it using the [go-chicken](https://github.com/aaronland/go-chicken)
+`clucking` method and drops the results on the floor.
+
+Here are the relevant settings in the config file:
+
+```
+{
+	"daemon": {
+		"protocol": "http",
+		"host": "localhost",
+		"port": 8080,
+		"allow_debug": false
+	},
+	...
+	"webhooks": [
+		{
+			"endpoint": "/insecure-test",
+	 		"receiver": "insecure",
+			"transformations": [ "clucking" ],
+			"dispatchers": [ "null" ]
+		}
+	]
+}
+```
+
+First we start `webhookd`:
+
+```
+./bin/webhookd -config ./config.json
+2018/07/21 08:43:37 webhookd listening for requests on http://localhost:8080
+```
+
+Then we pass `webhookd` a file along with a `debug=1` query parameter so that we
+can see the output:
+
+```
+curl -v 'http://localhost:8080/insecure-test?debug=1' -d @README.md
+* Connected to localhost (127.0.0.1) port 8080 (#0)
+> POST /insecure-test?debug=1 HTTP/1.1
+> Host: localhost:8080
+> User-Agent: curl/7.54.0
+> Accept: */*
+> Content-Length: 12790
+> Content-Type: application/x-www-form-urlencoded
+> Expect: 100-continue
+> 
+< HTTP/1.1 100 Continue
+* We are completely uploaded and fine
+< HTTP/1.1 200 OK
+< Access-Control-Allow-Origin: *
+< Content-Type: text/plain
+< X-Webhookd-Time-To-Dispatch: 16.907µs
+< X-Webhookd-Time-To-Process: 13.033089ms
+< X-Webhookd-Time-To-Receive: 209.332µs
+< X-Webhookd-Time-To-Transform: 12.802186ms
+< Date: Sat, 21 Jul 2018 15:43:40 GMT
+< Transfer-Encoding: chunked
+< 
+# bok bok b'gawk-cluck cluck![](bok bok b'gawk/bok bok b'gawk-bok bok bok.cluck
+cluck)bok bok bok bok bok b'gawk bok bok bok cluck cluck bok bok b'gawk-bok bok
+bok cluck cluck-bok bok b'gawk-bok bok bok.bok bok b'gawk cluck cluck bok bok
+b'gawk bok bok b'gawk bok bok b'gawk bok bok b'gawk cluck cluck bok bok b'gawk
+bok bok bok cluck cluck bok bok bok-bok bok bok. bok bok
+... and so on
+```
 
 #### Caveats
 
@@ -98,7 +169,7 @@ wh_dispatchers, _ := []webhookd.WebhookDispatcher{ pubsub }
 
 wh, _ := webhook.NewWebhook("/foo", wh_receiver, wh_transformations, wh_dispatchers)
 
-wh_daemon, _ := daemon.NewWebhookDaemon("localhost", 8080)
+wh_daemon, _ := daemon.NewWebhookDaemon("http", "localhost", 8080)
 wh_daemon.AddWebhook(wh)
 wh_daemon.Start()
 ```
@@ -108,7 +179,7 @@ See the way we're using an `Insecure` receiver and a `PubSub` dispatcher with a 
 ## Sending stuff to webhookd
 
 ```
-curl -v -X POST http://localhost:8080/foo -data-binary @README.md
+curl -v http://localhost:8080/foo -d @README.md
 
 * upload completely sent off: 703 out of 703 bytes
 < HTTP/1.1 200 OK
