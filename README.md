@@ -247,6 +247,29 @@ In this example we have configured the [GitHub "receiver"](https://github.com/wh
 
 This is a Lambda function to run an ECS task when invoked. It is principally meant to be used with the `go-webhookd` Lambda dispatcher. It should probably be renamed since it's pretty confusing, even for me.
 
+#### Roles
+
+Your Lambda function will need to run using a role with the following built-in AWS policies:
+
+* `AWSLambdaBasicExecutionRole`
+
+Additionally you will need the following policies, or equivalents:
+
+...
+
+#### Environment variables
+
+| Key | Value |
+| --- | --- |
+| WEBHOOKD_ECS_MODE | lambda |
+| WEBHOOKD_ECS_CLUSTER | ... |
+| WEBHOOKD_ECS_CONTAINER | ... |
+| WEBHOOKD_ECS_DSN | ... |
+| WEBHOOKD_ECS_SECURITY_GROUP | ... |
+| WEBHOOKD_ECS_SUBNET | ... |
+| WEBHOOKD_ECS_TASK | ... |
+| WEBHOOKD_COMMAND | ... |
+
 _The documentation for this tool is still being written..._
 
 ## See also
