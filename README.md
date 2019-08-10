@@ -47,11 +47,97 @@ Your Lambda function will need to run using a role with the following built-in A
 
 #### Environment variables
 
-| Key | Value | Notes |
+| Key | Value |
 | --- | --- | --- |
-| WEBHOOKD_CONFIG | A valid JSON encoded `webhookd` config file | Including a big honking string here is not ideal, it's just how it is today |
+| WEBHOOKD_CONFIG | A valid JSON encoded `webhookd` config file | 
 
 For details on `webhookd` config file please consult the [go-webhookd documentation](https://github.com/whosonfirst/go-webhookd#config-files).
+
+Including a big honking string here is not ideal, it's just how it is today. Really this should be stored in something like the AWS Secrets Manager but that will have to be "tomorrow's problem".
+
+For example, let's start with a config file that looks like this:
+
+```
+{
+    "daemon": {
+		"protocol": "http",
+		"host": "localhost",
+		"port": 8080
+	},
+	"receivers": {
+		"insecure": {
+			"name": "Insecure"
+		}		
+	},	
+	"transformations": {
+		"chicken": {
+			"name": "Chicken",
+			"language": "zxx",
+			"clucking": false
+		}				
+		
+	},
+	"dispatchers": {
+		"log": {
+			"name": "Log"
+		}
+	},
+	"webhooks": [
+		{
+			"endpoint": "/insecure",
+		 	"receiver": "insecure",
+			"transformations": [ "chicken" ],
+			"dispatchers": [ "log" ]
+		}
+	]
+}
+```
+
+And an AWS Lambda test event configured to act like an AWS API Gateway Proxy event like this:
+
+```
+{
+  "body": "hello world",
+  "resource": "/{proxy+}",
+  "path": "/cnSkGhLKpLqTWYOKpEmdLeljtYMeIlTPmFONZcSNGSGotFBPMSGBfgjzOwlTKaMM",
+  "httpMethod": "POST",
+  "isBase64Encoded": false,
+  "pathParameters": {
+    "proxy": "/cnSkGhLKpLqTWYOKpEmdLeljtYMeIlTPmFONZcSNGSGotFBPMSGBfgjzOwlTKaMM"
+  },
+  "headers": {
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+    "Accept-Encoding": "gzip, deflate, sdch",
+    "Accept-Language": "en-US,en;q=0.8",
+    "Cache-Control": "max-age=0",
+    "CloudFront-Forwarded-Proto": "https",
+    "CloudFront-Is-Desktop-Viewer": "true",
+    "CloudFront-Is-Mobile-Viewer": "false",
+    "CloudFront-Is-SmartTV-Viewer": "false",
+    "CloudFront-Is-Tablet-Viewer": "false",
+    "CloudFront-Viewer-Country": "US",
+    "Host": "1234567890.execute-api.us-east-1.amazonaws.com",
+    "Upgrade-Insecure-Requests": "1",
+    "User-Agent": "Custom User Agent String",
+    "Via": "1.1 08f323deadbeefa7af34d5feb414ce27.cloudfront.net (CloudFront)",
+    "X-Amz-Cf-Id": "cDehVQoZnx43VYQb9j2-nvCh-9z396Uhbp027Y2JvkCPNLmGJHqlaA==",
+    "X-Forwarded-For": "127.0.0.1, 127.0.0.2",
+    "X-Forwarded-Port": "443",
+    "X-Forwarded-Proto": "https"
+  }
+}
+```
+
+When you run the test you should see something like this:
+
+```
+START RequestId: 5c237ed9-f03f-407f-acaa-433625aa6950 Version: $LATEST
+2019/08/10 18:08:09 🐔 🐔
+END RequestId: 5c237ed9-f03f-407f-acaa-433625aa6950
+REPORT RequestId: 5c237ed9-f03f-407f-acaa-433625aa6950	Duration: 3.14 ms	Billed Duration: 100 ms 	Memory Size: 512 MB	Max Memory Used: 55 MB	
+```
+
+Specifically the string `hello world` was received by the "insecure" receiver, transformed in to `🐔 🐔` by the "chicken" transformer and distpatched to STDOUT (or in the case of AWS to CloudWatch) using the "log" dispatcher.
 
 ### API Gateway
 
