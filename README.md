@@ -239,9 +239,7 @@ In the "Webhooks settings" page for your GitHub repository in question you'll wa
 
 Where things like `EXAMPLE` and `ENDPOINT` and especially `S33KRET` are specific to your application.
 
-In this example we have configured the [GitHub "receiver"](https://github.com/whosonfirst/go-webhookd#github) to only pay attention to things that have been committed to the `master` branch and we have configured the [GitHubRepo "transformer"](https://github.com/whosonfirst/go-webhookd#githubrepo) to ignore any deletion events (in the commit).
-
-As with the other examples we're "dispatching" everything to the ["log" dispatcher](https://github.com/whosonfirst/go-webhookd#log) so the output would like something like this:
+In this example we have configured the [GitHub "receiver"](https://github.com/whosonfirst/go-webhookd#github) to only pay attention to things that have been committed to the `master` branch and we have configured the [GitHubRepo "transformer"](https://github.com/whosonfirst/go-webhookd#githubrepo) to ignore any deletion events (in the commit). As with the other examples we're "dispatching" everything to the ["log" dispatcher](https://github.com/whosonfirst/go-webhookd#log) so the output would like something like this:
 
 ![](docs/images/github-repo-log.png)
 
