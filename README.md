@@ -43,7 +43,9 @@ Your Lambda function will need to run using a role with the following built-in A
 | --- | --- | --- |
 | WEBHOOKD_CONFIG | A valid JSON encoded `webhookd` config file | 
 
-Including a big honking string here is not ideal, it's just how it is today. Really this should be stored in something like the AWS Secrets Manager but that will have to be "tomorrow's problem".
+Including a big honking string here is not ideal, it's just how it is today. For now you'll just have to use the `webhookd-flatten-config` tool described above.
+
+Really, this should be stored in something like the AWS Secrets Manager but that will have to be "tomorrow's problem".
 
 For example, let's start with a config file that looks like this:
 
@@ -183,6 +185,61 @@ And in your CloudWatch logs you'd see something like this:
 ```
 
 As of this writing it is not possible to send back the value of a transformation in the response body of a (`webhookd`) request.
+
+#### A more concrete example
+
+Here's another example that doesn't involve chickens (🐔). In this example we'll configure `webhookd` to listen for webhooks sent by GitHub and log the names of the repository that sent the hook.
+
+Your config file should look like this, albeit with specific secrets and endpoints:
+
+```
+{
+    "daemon": {
+		"protocol": "http",
+		"host": "localhost",
+		"port": 8080
+	},
+	"receivers": {
+		"github": {
+			"name": "GitHub",
+			"secret": "S33KRET",
+			"ref": "refs/heads/master"
+		}			    
+	},	
+	"transformations": {
+		"repo": {
+			"name": "GitHubRepo",
+			"exclude_additions": false,
+			"exclude_modifications": false,
+			"exclude_deletions": false
+		}				
+		
+	},
+	"dispatchers": {
+		"log": {
+			"name": "Log"
+		}
+	},
+	"webhooks": [
+		{
+		    "endpoint": "/ENDPOINT",
+		    "receiver": "github",
+		    "transformations": [ "repo" ],
+		    "dispatchers": [ "log" ]
+		}	    
+	]
+}
+```
+
+In the "Webhooks settings" page for your GitHub repository in question you'll want to plug in the following:
+
+| Key | Value |
+| Payload URL | https://EXAMPLE.execute-api.us-east-1.amazonaws.com/STAGE/ENDPOINT |
+| Content type | application/json |
+| Secret | S33KRET |
+
+Where things like `EXAMPLE` and `ENDPOINT` and especially `S33KRET` are specific to your application.
+
 
 ### webhookd-lambda-task
 
