@@ -129,7 +129,7 @@ END RequestId: 5c237ed9-f03f-407f-acaa-433625aa6950
 REPORT RequestId: 5c237ed9-f03f-407f-acaa-433625aa6950	Duration: 3.14 ms	Billed Duration: 100 ms 	Memory Size: 512 MB	Max Memory Used: 55 MB	
 ```
 
-Specifically the string `hello world` was received by the "insecure" receiver, transformed in to `🐔 🐔` by the "chicken" transformer and distpatched to STDOUT (or in the case of AWS to CloudWatch) using the "log" dispatcher.
+Specifically the string `hello world` was received by the ["insecure" receiver](https://github.com/whosonfirst/go-webhookd#insecure), transformed in to `🐔 🐔` by the ["chicken" transformer](https://github.com/whosonfirst/go-webhookd#chicken) and dispatched to STDOUT (or in the case of AWS to CloudWatch) using the ["log" dispatcher](https://github.com/whosonfirst/go-webhookd#log).
 
 For details on receivers, transformers and dispatchers please consult the main [go-webhookd documentation](https://github.com/whosonfirst/go-webhookd/blob/master/README.md).
 
