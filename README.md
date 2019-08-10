@@ -135,7 +135,54 @@ For details on receivers, transformers and dispatchers please consult the main [
 
 #### API Gateway
 
-_Please write me_
+In order to send requests to the `webhookd` Lambda function over HTTP you need to configure an API Gateway instance to sit in front of it (the Lambda function) and proxy requests and responses.
+
+* Create a new API Gateway API
+* Create a new resource for that API
+* Configure as "proxy resource" (enable API Gateway CORS if you think that's necessary)
+* Delete the `ANY` method and create a new `POST` method
+* Configure it (the `POST` method) to use the "Lambda Function Proxy" integration type and associate it with whatever you've named your Lambda function (above)
+* Deploy your API Gateway API (for the purposes of this example we're going to say you called it `STAGE`)
+
+Now let's say we have a file called `test.svg` that looks like this:
+
+```
+<svg width="512.000000" height="512.000000" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><path d="M512.000000 51.171577,502.111346 59.685313,500.130702 79.677695,505.024057 80.118699,507.237717 85.263736,512.000000 83.358551,512.000000 511.923681,0.000000 511.923681,0.000000 0.000000,512.000000 0.000000,512.000000 51.171577 Z" fill="#ffffff" fill-opacity="0.5" kind="ocean" sort_rank="200" stroke="#000000" stroke_opacity="1"/><path d="M512.000000 51.171577,502.111346 59.685313,500.130702 79.677695,505.024057 80.118699,507.237717 85.263736,512.000000 83.358551" fill="#ffffff" fill-opacity="0" kind="ocean" sort_rank="205" stroke="#000000" stroke_opacity="1"/></svg>
+```
+
+Your API gateway lives at `EXAMPLE.execute-api.us-east-1.amazonaws.com/STAGE` so you would post your SVG file like this:
+ 
+```
+$> curl -v -X POST https://EXAMPLE.execute-api.us-east-1.amazonaws.com/STAGE/insecure. -d@test.svg
+...
+> POST /STAGE/insecure HTTP/2
+> Host: EXAMPLE.execute-api.us-east-1.amazonaws.com
+> User-Agent: curl/7.54.0
+> Accept: */*
+> Content-Length: 682
+> Content-Type: application/x-www-form-urlencoded
+> 
+* Connection state changed (MAX_CONCURRENT_STREAMS updated)!
+* We are completely uploaded and fine
+< HTTP/2 200 
+< date: Sat, 10 Aug 2019 18:57:08 GMT
+< content-type: application/json
+< content-length: 0
+< x-amzn-requestid: a714f2c0-bba0-11e9-95d9-2510c8e0110e
+< x-webhookd-time-to-receive: 8.491?s
+< x-webhookd-time-to-transform: 1.391499ms
+< x-amz-apigw-id: EXAMPLE
+< x-webhookd-time-to-process: 1.454697ms
+< x-webhookd-time-to-dispatch: 54.153?s
+```
+
+And in your CloudWatch logs you'd see something like this:
+
+```
+2019/08/10 18:57:08 🐔-🐔 🐔🐔 🐔🐔 🐔"512.000000" 🐔🐔 🐔"512.000000" 🐔🐔 🐔"0 0 512 512" 🐔🐔 🐔"🐔://🐔.🐔3.🐔/2000/🐔"🐔-🐔 🐔🐔-🐔 🐔🐔 🐔🐔 🐔"🐔512.000000 51.171577,502.111346 59.685313,500.130702 79.677695,505.024057 80.118699,507.237717 85.263736,512.000000 83.358551,512.000000 511.923681,0.000000 511.923681,0.000000 0.000000,512.000000 0.000000,512.000000 51.171577 🐔" 🐔🐔 🐔"#🐔" 🐔-🐔🐔 🐔"0.5" 🐔🐔 🐔"🐔" 🐔_🐔🐔 🐔"200" 🐔🐔 🐔"#000000" 🐔_🐔🐔 🐔"1"/🐔-🐔 🐔🐔-🐔 🐔🐔 🐔🐔 🐔"🐔512.000000 51.171577,502.111346 59.685313,500.130702 79.677695,505.024057 80.118699,507.237717 85.263736,512.000000 83.358551" 🐔🐔 🐔"#🐔" 🐔-🐔🐔 🐔"0" 🐔🐔 🐔"🐔" 🐔_🐔🐔 🐔"205" 🐔🐔 🐔"#000000" 🐔_🐔🐔 🐔"1"/🐔-🐔 🐔🐔-🐔 🐔/🐔🐔-🐔 🐔
+```
+
+As of this writing it is not possible to send back the value of a transformation in the response body of a (`webhookd`) request.
 
 ### webhookd-lambda-task
 
