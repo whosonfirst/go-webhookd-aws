@@ -16,6 +16,16 @@ make tools
 
 All of this package's dependencies are bundled with the code in the `vendor` directory.
 
+## Tools
+
+### webhookd-lambda
+
+This will run `webhookd` HTTP daemon as a Lambda function. In order to use it you will need to configure an AWS API Gateway endpoint.
+
+### webhookd-lambda-task
+
+This is a Lambda function to run an ECS task when invoked. It is principally meant to be used with the `go-webhookd` Lambda dispatcher. It should probably be renamed since it's pretty confusing, even for me.
+
 ## AWS
 
 ### Lambda
