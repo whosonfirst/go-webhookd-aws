@@ -245,7 +245,7 @@ In this example we have configured the [GitHub "receiver"](https://github.com/wh
 
 ### webhookd-lambda-task
 
-This is a Lambda function to run an ECS task when invoked. It is principally meant to be used with the `go-webhookd` [Lambda dispatcher](https://github.com/whosonfirst/go-webhookd/#lambda), and in particular with the [GitHubRepo transformer](https://github.com/whosonfirst/go-webhookd/#githubrepo) in a [https://whosonfirst.org](Who's On First) context.
+This is a Lambda function to run an ECS task when invoked. It is principally meant to be used with the `go-webhookd` [Lambda dispatcher](https://github.com/whosonfirst/go-webhookd/#lambda), and in particular with the [GitHubRepo transformer](https://github.com/whosonfirst/go-webhookd/#githubrepo) in a [Who's On First](https://whosonfirst.org/) context.
 
 There is an [open ticket](https://github.com/whosonfirst/go-webhookd/issues/19) to add a dedicated "run an ECS Task" dispatcher but until that's completed this is what we're stuck with.
 
@@ -294,7 +294,7 @@ Additionally you will need the following policies, or equivalents:
 | WEBHOOKD_ECS_SUBNET | `{AWS_SUBNET1},{AWS_SUBNET2}...` |
 | WEBHOOKD_ECS_TASK | `{ECS_TASK_NAME}:{ECS_TASK_REVISION}` |
 
-See the way `WEBHOOKD_COMMAND` is defined as `{SOME COMMAND ON YOUR CONTAINER} %s` ? That's because under the hood the code was originally written to pass the payload received by the Lambda function as the second argument to the Go `fmt.Sprintf` method.
+See the way `WEBHOOKD_COMMAND` is defined as `"{SOME COMMAND ON YOUR CONTAINER} %s"` ? That's because under the hood the code was originally written to pass the payload received by the Lambda function as the second argument to the Go `fmt.Sprintf` method.
 
 ```
 lambda_handler := func(ctx context.Context, payload string) (interface{}, error) {
