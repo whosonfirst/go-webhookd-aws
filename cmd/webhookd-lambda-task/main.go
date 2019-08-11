@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	_ "encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -10,6 +10,7 @@ import (
 	"github.com/whosonfirst/go-whosonfirst-cli/flags"
 	"log"
 	"os"
+	"regexp"
 	"strings"
 )
 
@@ -37,6 +38,7 @@ func main() {
 
 	var mode = flag.String("mode", "cli", "...")
 	var command = flag.String("command", "", "...")
+	var command_insecure = flag.Bool("command-insecure", false, "...")	
 
 	flag.Parse()
 
@@ -97,7 +99,6 @@ func main() {
 		task_rsp, err := ecs.LaunchTask(task_opts, cmd...)
 
 		if err != nil {
-			log.Println("OH NO", err)
 			return nil, err
 		}
 
@@ -135,8 +136,21 @@ func main() {
 
 	case "lambda":
 
+		re, err := regexp.Compile(`^[a-zA-Z0-9\-_]+$`)
+
+		if err != nil {
+			log.Fatal(err)
+		}
+		
 		string_handler := func(ctx context.Context, payload string) (interface{}, error) {
 
+			if !*command_insecure {
+				
+				if !re.MatchString(payload){
+					return nil, errors.New("Invalid payload")
+				}
+			}
+			
 			return launchTask(*command, payload)
 		}
 

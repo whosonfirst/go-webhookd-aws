@@ -247,7 +247,7 @@ In this example we have configured the [GitHub "receiver"](https://github.com/wh
 
 This is a Lambda function to run an ECS task when invoked. It is principally meant to be used with the `go-webhookd` [Lambda dispatcher](https://github.com/whosonfirst/go-webhookd/#lambda), and in particular with the [GitHubRepo transformer](https://github.com/whosonfirst/go-webhookd/#githubrepo) in a [https://whosonfirst.org](Who's On First) context.
 
-There is an [open ticket](https://github.com/whosonfirst/go-webhookd/issues/19) to add a dedicated ECS Task dispatcher but until that's completed this is what we're stuck with.
+There is an [open ticket](https://github.com/whosonfirst/go-webhookd/issues/19) to add a dedicated "run an ECS Task" dispatcher but until that's completed this is what we're stuck with.
 
 #### Roles
 
@@ -294,7 +294,7 @@ Additionally you will need the following policies, or equivalents:
 | WEBHOOKD_ECS_SUBNET | `{AWS_SUBNET1},{AWS_SUBNET2}...` |
 | WEBHOOKD_ECS_TASK | `{ECS_TASK_NAME}:{ECS_TASK_REVISION}` |
 
-See the way `WEBHOOKD_COMMAND` is defined as `{SOME COMMAND ON YOUR CONTAINER} %s` ? That's because under the hood passing the payload received by the Lambda function to the Go `fmt.Sprintf` method as `%s`.
+See the way `WEBHOOKD_COMMAND` is defined as `{SOME COMMAND ON YOUR CONTAINER} %s` ? That's because under the hood the code was originally written to pass the payload received by the Lambda function as the second argument to the Go `fmt.Sprintf` method.
 
 ```
 lambda_handler := func(ctx context.Context, payload string) (interface{}, error) {
@@ -312,6 +312,30 @@ launchTask := func(command string, args ...interface{}) (interface{}, error) {
 ```
 
 Is this awesome? No. Could it be abused? You bet. Is it a bad idea, generally? Probably.
+
+With that in mind, the code has been updated to be strict about input when run as a Lambda function. Specifically, all payloads are validated against the following regular expression: `^[a-zA-Z0-9\-_]+$`. As in:
+
+```
+re, err := regexp.Compile(`^[a-zA-Z0-9\-_]+$`)
+
+if err != nil {
+	log.Fatal(err)
+}
+		
+lambda_handler := func(ctx context.Context, payload string) (interface{}, error) {
+
+	if !*command_insecure {
+
+		if !re.MatchString(payload){
+			return nil, errors.New("Invalid payload")
+		}
+	}
+			
+	return launchTask(*command, payload)
+}
+```
+
+You can override this restriction by setting the `WEBHOOKD_COMMAND_INSECURE=true` environment variable. If you do it is assumed that you are confident about any input being passed to the Lambda function and then on to the ECS task.
 
 By default, the Lambda function will launch the task and return without waiting to see whether it succeeded or not. If you want to wait and check the response of the task you need to set the following environment variables:
 
