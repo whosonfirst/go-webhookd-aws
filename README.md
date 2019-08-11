@@ -255,20 +255,42 @@ Your Lambda function will need to run using a role with the following built-in A
 
 Additionally you will need the following policies, or equivalents:
 
-...
+```
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "VisualEditor0",
+            "Effect": "Allow",
+            "Action": "ecs:RunTask",
+            "Resource": "arn:aws:ecs:{AWS_REGION}:{AWS_ACCOUNT_ID}:task-definition/{ECS_TASK_NAME}:*"
+        },
+        {
+            "Sid": "Stmt1512361593000",
+            "Effect": "Allow",
+            "Action": [
+                "iam:PassRole"
+            ],
+            "Resource": [
+                "arn:aws:iam::{AWS_ACCOUNT_ID}:role/{AWS_IAM_ROLE_FOR_THE_ECS_TASK_YOU_WANT_TO_RUN}"
+            ]
+        }
+    ]
+}
+```
 
 #### Environment variables
 
 | Key | Value |
 | --- | --- |
-| WEBHOOKD_ECS_MODE | lambda |
+| WEBHOOKD_MODE | lambda |
+| WEBHOOKD_COMMAND | ... |
 | WEBHOOKD_ECS_CLUSTER | ... |
 | WEBHOOKD_ECS_CONTAINER | ... |
 | WEBHOOKD_ECS_DSN | ... |
 | WEBHOOKD_ECS_SECURITY_GROUP | ... |
 | WEBHOOKD_ECS_SUBNET | ... |
 | WEBHOOKD_ECS_TASK | ... |
-| WEBHOOKD_COMMAND | ... |
 
 _The documentation for this tool is still being written..._
 
