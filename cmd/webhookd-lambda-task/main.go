@@ -94,8 +94,6 @@ func main() {
 		str_cmd := fmt.Sprintf(command, args...)
 		cmd := strings.Split(str_cmd, " ")
 
-		log.Println("LAUNCH TASK", cmd)
-
 		task_rsp, err := ecs.LaunchTask(task_opts, cmd...)
 
 		if err != nil {
@@ -138,8 +136,6 @@ func main() {
 	case "lambda":
 
 		string_handler := func(ctx context.Context, payload string) (interface{}, error) {
-
-			log.Println("RECEIVED", payload)
 
 			return launchTask(*command, payload)
 		}

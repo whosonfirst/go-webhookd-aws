@@ -245,7 +245,9 @@ In this example we have configured the [GitHub "receiver"](https://github.com/wh
 
 ### webhookd-lambda-task
 
-This is a Lambda function to run an ECS task when invoked. It is principally meant to be used with the `go-webhookd` Lambda dispatcher. It should probably be renamed since it's pretty confusing, even for me.
+This is a Lambda function to run an ECS task when invoked. It is principally meant to be used with the `go-webhookd` [Lambda dispatcher](https://github.com/whosonfirst/go-webhookd/#lambda), and in particular with the [GitHubRepo transformer](https://github.com/whosonfirst/go-webhookd/#githubrepo) in a [https://whosonfirst.org](Who's On First) context.
+
+There is an [open ticket](https://github.com/whosonfirst/go-webhookd/issues/19) to add a dedicated ECS Task dispatcher but until that's completed this is what we're stuck with.
 
 #### Roles
 
@@ -266,7 +268,7 @@ Additionally you will need the following policies, or equivalents:
             "Resource": "arn:aws:ecs:{AWS_REGION}:{AWS_ACCOUNT_ID}:task-definition/{ECS_TASK_NAME}:*"
         },
         {
-            "Sid": "Stmt1512361593000",
+            "Sid": "VisualEditor1",
             "Effect": "Allow",
             "Action": [
                 "iam:PassRole"
@@ -283,16 +285,41 @@ Additionally you will need the following policies, or equivalents:
 
 | Key | Value |
 | --- | --- |
-| WEBHOOKD_MODE | lambda |
-| WEBHOOKD_COMMAND | ... |
-| WEBHOOKD_ECS_CLUSTER | ... |
-| WEBHOOKD_ECS_CONTAINER | ... |
-| WEBHOOKD_ECS_DSN | ... |
-| WEBHOOKD_ECS_SECURITY_GROUP | ... |
-| WEBHOOKD_ECS_SUBNET | ... |
-| WEBHOOKD_ECS_TASK | ... |
+| WEBHOOKD_MODE | `lambda` |
+| WEBHOOKD_COMMAND | `{SOME COMMAND ON YOUR CONTAINER} %s` |
+| WEBHOOKD_ECS_CLUSTER | `{ECS_CLUSTER_NAME}` |
+| WEBHOOKD_ECS_CONTAINER | `{ECS_CONTAINER_NAME}` |
+| WEBHOOKD_ECS_DSN | `credentials=iam: region={AWS_REGION}` |
+| WEBHOOKD_ECS_SECURITY_GROUP | `{AWS_SECURITY_GROUP}` |
+| WEBHOOKD_ECS_SUBNET | `{AWS_SUBNET1},{AWS_SUBNET2}...` |
+| WEBHOOKD_ECS_TASK | `{ECS_TASK_NAME}:{ECS_TASK_REVISION}` |
 
-_The documentation for this tool is still being written..._
+See the way `WEBHOOKD_COMMAND` is defined as `{SOME COMMAND ON YOUR CONTAINER} %s` ? That's because under the hood passing the payload received by the Lambda function to the Go `fmt.Sprintf` method as `%s`.
+
+```
+lambda_handler := func(ctx context.Context, payload string) (interface{}, error) {
+	return launchTask(*command, payload)
+}
+
+launchTask := func(command string, args ...interface{}) (interface{}, error) {
+
+	str_cmd := fmt.Sprintf(command, args...)
+	cmd := strings.Split(str_cmd, " ")
+
+	task_rsp, err := ecs.LaunchTask(task_opts, cmd...)
+	...
+}		
+```
+
+Is this awesome? No. Could it be abused? You bet. Is it a bad idea, generally? Probably.
+
+By default, the Lambda function will launch the task and return without waiting to see whether it succeeded or not. If you want to wait and check the response of the task you need to set the following environment variables:
+
+| Key | Value |
+| --- | --- |
+| WEBHOOKD_MONITOR | `true` |
+| WEBHOOKD_LOGS | boolean, indicating whether to return CloudWatch logs with the response (default is false) |
+| WEBHOOKD_LOGS_DSN | "credentials=iam: region={AWS_REGION}" |
 
 ## See also
 
