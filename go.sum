@@ -50,6 +50,8 @@ github.com/whosonfirst/go-webhookd v0.1.0 h1:hljGgcV2alnLqkb5a/8Jq4n9zvN3AiF9imq
 github.com/whosonfirst/go-webhookd v0.1.0/go.mod h1:i2y4aAvPf+i5AKCe14+gLzTN1Jb6kdyXGDPVielvyIQ=
 github.com/whosonfirst/go-webhookd v0.1.1 h1:wvdRKRgTH0tP+mMN1HN5ZRSTDh676Vp41jDc8lI+awc=
 github.com/whosonfirst/go-webhookd v0.1.1/go.mod h1:cc++U4lfhVOjlspvCX0knXmJtDd3MLG/5dhKtHhXwV0=
+github.com/whosonfirst/go-webhookd v0.1.2 h1:ZrTrin+p3l2J17KDRiPehKdo9m3rgR+xywqiHxoVsM8=
+github.com/whosonfirst/go-webhookd v0.1.2/go.mod h1:cc++U4lfhVOjlspvCX0knXmJtDd3MLG/5dhKtHhXwV0=
 github.com/whosonfirst/go-whosonfirst-aws v0.1.3 h1:qnC7HcQyYrW8JRfcUZjsdNMZjDbf3rhnW77kFDQdCgY=
 github.com/whosonfirst/go-whosonfirst-aws v0.1.3/go.mod h1:ev1Lhw+fDMbnAb0srHyJeAJW9n12gV4La3ZkX6opvbw=
 github.com/whosonfirst/go-whosonfirst-cli v0.1.0 h1:Wwj9z0R/ryHmPmpVm5jCbXdG4agJzKMWXDtPVReN/KA=

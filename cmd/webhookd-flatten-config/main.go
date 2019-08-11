@@ -14,7 +14,7 @@ import (
 func main() {
 
 	config_path := flag.String("config", "", "The path your webhookd config file")
-	
+
 	flag.Parse()
 
 	abs_path, err := filepath.Abs(*config_path)
@@ -59,4 +59,3 @@ func main() {
 
 	fmt.Println(string(body))
 }
-	

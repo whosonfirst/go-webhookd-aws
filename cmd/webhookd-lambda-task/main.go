@@ -38,7 +38,7 @@ func main() {
 
 	var mode = flag.String("mode", "cli", "...")
 	var command = flag.String("command", "", "...")
-	var command_insecure = flag.Bool("command-insecure", false, "...")	
+	var command_insecure = flag.Bool("command-insecure", false, "...")
 
 	flag.Parse()
 
@@ -141,16 +141,16 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		
+
 		string_handler := func(ctx context.Context, payload string) (interface{}, error) {
 
 			if !*command_insecure {
-				
-				if !re.MatchString(payload){
+
+				if !re.MatchString(payload) {
 					return nil, errors.New("Invalid payload")
 				}
 			}
-			
+
 			return launchTask(*command, payload)
 		}
 

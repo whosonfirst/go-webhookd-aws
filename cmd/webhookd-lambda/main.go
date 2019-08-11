@@ -44,7 +44,5 @@ func main() {
 	mux.HandleFunc("/", handler)
 
 	lambda_opts := new(algnhsa.Options)
-	// lambda_opts.BinaryContentTypes = []string{"image/png"}
-
 	algnhsa.ListenAndServe(mux, lambda_opts)
 }

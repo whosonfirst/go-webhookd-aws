@@ -64,7 +64,7 @@ github.com/google/go-querystring/query
 github.com/jmespath/go-jmespath
 # github.com/whosonfirst/algnhsa v0.1.0
 github.com/whosonfirst/algnhsa
-# github.com/whosonfirst/go-webhookd v0.1.1
+# github.com/whosonfirst/go-webhookd v0.1.2
 github.com/whosonfirst/go-webhookd/config
 github.com/whosonfirst/go-webhookd/daemon
 github.com/whosonfirst/go-webhookd
