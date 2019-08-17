@@ -286,7 +286,7 @@ Additionally you will need the following policies, or equivalents:
 | Key | Value |
 | --- | --- |
 | WEBHOOKD_MODE | `lambda` |
-| WEBHOOKD_COMMAND | `{SOME COMMAND ON YOUR CONTAINER} %s` |
+| WEBHOOKD_COMMAND | `{SOME COMMAND ON YOUR CONTAINER},%s` |
 | WEBHOOKD_ECS_CLUSTER | `{ECS_CLUSTER_NAME}` |
 | WEBHOOKD_ECS_CONTAINER | `{ECS_CONTAINER_NAME}` |
 | WEBHOOKD_ECS_DSN | `credentials=iam: region={AWS_REGION}` |
@@ -294,7 +294,9 @@ Additionally you will need the following policies, or equivalents:
 | WEBHOOKD_ECS_SUBNET | `{AWS_SUBNET1},{AWS_SUBNET2}...` |
 | WEBHOOKD_ECS_TASK | `{ECS_TASK_NAME}:{ECS_TASK_REVISION}` |
 
-See the way `WEBHOOKD_COMMAND` is defined as `"{SOME COMMAND ON YOUR CONTAINER} %s"` ? That's because under the hood the code was originally written to pass the payload received by the Lambda function as the second argument to the Go `fmt.Sprintf` method.
+The `{SOME COMMAND ON YOUR CONTAINER},%s` string assumes the same comma-separated arguments syntax used by Docker and/or ECS container override statements.
+
+See the way `WEBHOOKD_COMMAND` is defined as `"{SOME COMMAND ON YOUR CONTAINER},%s"` ? That's because under the hood the code was originally written to pass the payload received by the Lambda function as the second argument to the Go `fmt.Sprintf` method.
 
 ```
 lambda_handler := func(ctx context.Context, payload string) (interface{}, error) {
@@ -304,7 +306,7 @@ lambda_handler := func(ctx context.Context, payload string) (interface{}, error)
 launchTask := func(command string, args ...interface{}) (interface{}, error) {
 
 	str_cmd := fmt.Sprintf(command, args...)
-	cmd := strings.Split(str_cmd, " ")
+	cmd := strings.Split(str_cmd, ",")
 
 	task_rsp, err := ecs.LaunchTask(task_opts, cmd...)
 	...

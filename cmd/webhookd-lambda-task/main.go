@@ -94,8 +94,11 @@ func main() {
 	launchTask := func(command string, args ...interface{}) (interface{}, error) {
 
 		str_cmd := fmt.Sprintf(command, args...)
-		cmd := strings.Split(str_cmd, " ")
+		cmd := strings.Split(str_cmd, ",")	// match the weird Docker/ECS stuff
 
+		// log.Println(strings.Join(cmd, " "))
+		// log.Println(cmd)
+		
 		task_rsp, err := ecs.LaunchTask(task_opts, cmd...)
 
 		if err != nil {
