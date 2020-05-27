@@ -9,14 +9,14 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/whosonfirst/go-webhookd/v3"
-	wh_dispatcher "github.com/whosonfirst/go-webhookd/v3/dispatcher"
+	"github.com/whosonfirst/go-webhookd/v3/dispatcher"
 	"net/url"
 )
 
 func init() {
 
 	ctx := context.Background()
-	err := wh_dispatcher.RegisterDispatcher(ctx, "lambda", NewLambdaDispatcher)
+	err := dispatcher.RegisterDispatcher(ctx, "lambda", NewLambdaDispatcher)
 
 	if err != nil {
 		panic(err)
