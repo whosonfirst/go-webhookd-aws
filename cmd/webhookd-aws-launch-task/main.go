@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/base64"
 	"errors"
 	"flag"
 	"fmt"
@@ -153,14 +154,22 @@ func main() {
 
 		string_handler := func(ctx context.Context, payload string) (interface{}, error) {
 
+			target_b, err := base64.StdEncoding.DecodeString(payload)
+
+			if err != nil {
+				return nil, err
+			}
+
+			target := string(target_b)
+
 			if !*command_insecure {
 
-				if !re.MatchString(payload) {
+				if !re.MatchString(target) {
 					return nil, errors.New("Invalid payload")
 				}
 			}
 
-			return launchTask(*command, payload)
+			return launchTask(*command, target)
 		}
 
 		lambda.Start(string_handler)
