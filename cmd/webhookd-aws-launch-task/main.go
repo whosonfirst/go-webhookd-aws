@@ -5,9 +5,9 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aaronland/go-aws-ecs"
-	"github.com/sfomuseum/go-flags/flagset"	
+	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/sfomuseum/go-flags/flagset"
 	"github.com/sfomuseum/go-flags/multi"
 	"log"
 	"os"
@@ -18,7 +18,7 @@ import (
 func main() {
 
 	fs := flagset.NewFlagSet("webhookd-aws-launch-task")
-	
+
 	var ecs_dsn = fs.String("ecs-dsn", "", "A valid (go-whosonfirst-aws) ECS DSN.")
 
 	var ecs_container = fs.String("ecs-container", "", "The name of your AWS ECS container.")
@@ -84,7 +84,6 @@ func main() {
 	}
 
 	task_opts := &ecs.TaskOptions{
-		DSN:            *ecs_dsn,
 		Task:           *ecs_task,
 		Container:      *ecs_container,
 		Cluster:        *ecs_cluster,
@@ -97,32 +96,36 @@ func main() {
 	launchTask := func(command string, args ...interface{}) (interface{}, error) {
 
 		str_cmd := fmt.Sprintf(command, args...)
-		cmd := strings.Split(str_cmd, ",")	// match the weird Docker/ECS stuff
+		cmd := strings.Split(str_cmd, ",") // match the weird Docker/ECS stuff
 
 		// log.Println(strings.Join(cmd, " "))
 		// log.Println(cmd)
-		
-		task_rsp, err := ecs.LaunchTask(task_opts, cmd...)
+
+		task_rsp, err := ecs.LaunchTaskWithDSN(*ecs_dsn, task_opts, cmd...)
 
 		if err != nil {
 			return nil, err
 		}
 
 		log.Println("TASKS", task_rsp.Tasks)
+		return task_rsp.Tasks, nil
 
-		if !*monitor {
-			return task_rsp.Tasks, nil
-		}
+		/*
 
-		monitor_opts := &ecs.MonitorTaskOptions{
-			DSN:       *ecs_dsn,
-			Container: *ecs_container,
-			Cluster:   *ecs_cluster,
-			WithLogs:  *logs,
-			LogsDSN:   *logs_dsn,
-		}
+			if !*monitor {
+				return task_rsp.Tasks, nil
+			}
 
-		return ecs.MonitorTasks(monitor_opts, task_rsp.Tasks...)
+			monitor_opts := &ecs.MonitorTaskOptions{
+				DSN:       *ecs_dsn,
+				Container: *ecs_container,
+				Cluster:   *ecs_cluster,
+				WithLogs:  *logs,
+				LogsDSN:   *logs_dsn,
+			}
+
+			return ecs.MonitorTasks(monitor_opts, task_rsp.Tasks...)
+		*/
 	}
 
 	switch *mode {
