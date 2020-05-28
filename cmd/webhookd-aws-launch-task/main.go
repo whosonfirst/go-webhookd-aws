@@ -1,5 +1,10 @@
 package main
 
+// this should probably be put in another package since it very much
+// whosonfirst specific in that it expect to be passed a single repo
+// that will be used to construct a command to invoke in/on an ECS
+// container (20200528/thisisaaronland)
+
 import (
 	"context"
 	"encoding/base64"
