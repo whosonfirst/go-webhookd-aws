@@ -10,6 +10,14 @@ Before you begin please [read the go-webhookd documentation](https://github.com/
 
 `whosonfirst/go-webhookd-aws/v2` is backwards incompatible with `whosonfirst/go-webhookd-aws` "v1". Importantly the ability to run a `webhookd` server _as_ an AWS Lambda has been merged back in to `whosonfirst/go-webhookd/v2` (and higher). This package only manages AWS specific dispatchers now.
 
+## Usage
+
+```
+import (
+	_ "github.com/go-webhookd-aws/v2"
+)
+```
+
 ## Dispatchers
 
 ### Lambda
