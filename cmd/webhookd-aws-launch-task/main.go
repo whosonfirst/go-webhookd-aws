@@ -42,7 +42,6 @@ func main() {
 
 	var mode = fs.String("mode", "cli", "...")
 	var command = fs.String("command", "", "...")
-	var command_insecure = fs.Bool("command-insecure", false, "...")
 
 	flagset.Parse(fs)
 
@@ -91,6 +90,8 @@ func main() {
 		str_cmd := fmt.Sprintf(command, args...)
 		cmd := strings.Split(str_cmd, " ")
 
+		log.Printf("Launch ECS task with command '%s'\n", str_cmd)
+
 		task_rsp, err := ecs.LaunchTaskWithDSN(*ecs_dsn, task_opts, cmd...)
 
 		if err != nil {
@@ -117,7 +118,7 @@ func main() {
 
 	case "lambda":
 
-		re, err := regexp.Compile(`^[a-zA-Z0-9\-_]+$`)
+		re_target, err := regexp.Compile(`^[a-zA-Z0-9\-_]+$`)
 
 		if err != nil {
 			log.Fatal(err)
@@ -127,21 +128,38 @@ func main() {
 		// func (d *LambdaDispatcher) Dispatch in dispatcher.go
 		// which is why the base64 decoding (20200528/thisisaaronland)
 
+		// this is a nuisance when we are trying to test things so we
+		// will first check the string to see if it looks like a base64
+		// encoded value before we try to decode it (20200903/thisisaaronland)
+		//
+		// https://stackoverflow.com/questions/475074/regex-to-parse-or-validate-base64-data
+
+		re_b64, err := regexp.Compile(`^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$`)
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
 		string_handler := func(ctx context.Context, payload string) (interface{}, error) {
 
-			target_b, err := base64.StdEncoding.DecodeString(payload)
+			target := payload
 
-			if err != nil {
-				return nil, err
+			// see notes above
+
+			if re_b64.MatchString(payload) {
+
+				target_b, err := base64.StdEncoding.DecodeString(payload)
+
+				if err != nil {
+					log.Printf("Payload (%s) is not a base64 encoded string", payload)
+					return nil, err
+				}
+
+				target = string(target_b)
 			}
 
-			target := string(target_b)
-
-			if !*command_insecure {
-
-				if !re.MatchString(target) {
-					return nil, errors.New("Invalid payload")
-				}
+			if !re_target.MatchString(target) {
+				return nil, errors.New("Invalid payload")
 			}
 
 			return launchTask(*command, target)
