@@ -1,3 +1,3 @@
 # Overview
 
-[![Go Reference](https://pkg.go.dev/badge/github.com/aws/aws-lambda-go/lambda/messages.svg)](https://pkg.go.dev/github.com/aws/aws-lambda-go/lambda/messages)
+[![GoDoc](https://godoc.org/github.com/aws/aws-lambda-go/lambda/messages?status.svg)](https://godoc.org/github.com/aws/aws-lambda-go/lambda/messages)
