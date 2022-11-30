@@ -32,6 +32,7 @@ type LambdaDispatcher struct {
 	LambdaService *lambda.Lambda
 	// invocation_type is the name of AWS Lambda invocation type.
 	invocation_type string
+	check_preamble string
 }
 
 // NewLambdaDispatcher returns a new `LambdaDispatcher` instance configured by 'uri' in the form of:
@@ -72,12 +73,15 @@ func NewLambdaDispatcher(ctx context.Context, uri string) (webhookd.WebhookDispa
 		return nil, fmt.Errorf("Invalid invocation_type parameter")
 	}
 
+	check_preamble := false
+	
 	lambda_svc := lambda.New(lambda_sess)
 
 	d := LambdaDispatcher{
 		LambdaFunction:  lambda_function,
 		LambdaService:   lambda_svc,
 		invocation_type: invocation_type,
+		check_preamble: check_preamble,
 	}
 
 	return &d, nil
@@ -93,6 +97,10 @@ func (d *LambdaDispatcher) Dispatch(ctx context.Context, body []byte) *webhookd.
 		// pass
 	}
 
+	if d.check_preamble {
+
+	}
+	
 	// I don't understand why I need to base64 encode this...
 	// (20200526/thisisaaronland)
 
