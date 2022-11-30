@@ -1,6 +1,8 @@
 package aws
 
 import (
+	"bufio"
+	"bytes"
 	"context"
 	"encoding/base64"
 	"encoding/json"
@@ -10,8 +12,13 @@ import (
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/whosonfirst/go-webhookd/v3"
 	"github.com/whosonfirst/go-webhookd/v3/dispatcher"
+	"log"
 	"net/url"
+	"regexp"
+	"strings"
 )
+
+var preamble_re *regexp.Regexp
 
 func init() {
 
@@ -21,6 +28,8 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
+
+	preamble_re = regexp.MustCompile(`^#\s?([^\s]+)\s(.*)$`)
 }
 
 // LambdaDispatcher implements the `webhookd.WebhookDispatcher` interface for dispatching messages to an AWS Lambda function.
@@ -32,16 +41,21 @@ type LambdaDispatcher struct {
 	LambdaService *lambda.Lambda
 	// invocation_type is the name of AWS Lambda invocation type.
 	invocation_type string
-	check_preamble string
+	// An optional regular expression that will be compared to the commit message; if it matches the dispatcher will return an error with code `webhookd.HaltEvent`
+	halt_on_message *regexp.Regexp
+	// An optional regular expression that will be compared to the commit author; if it matches the dispatcher will return an error with code `webhookd.HaltEvent`
+	halt_on_author *regexp.Regexp
 }
 
 // NewLambdaDispatcher returns a new `LambdaDispatcher` instance configured by 'uri' in the form of:
 //
-// 	lambda://{FUNCTION_NAME}?{PARAMETERS}
+//	lambda://{FUNCTION_NAME}?{PARAMETERS}
 //
 // Where {PARAMETERS} are:
 // * `dsn=` A valid `aaronland/go-aws-session` string used to create an AWS session instance.
 // * `invocation_type=` The name of AWS Lambda invocation type. Valid options are: RequestResponse, Event, DryRun.
+// * `?halt_on_message` An optional regular expression that will be compared to the commit message; if it matches the transformer will return an error with code `webhookd.HaltEvent`
+// * `?halt_on_author` An optional regular expression that will be compared to the commit author; if it matches the transformer will return an error with code `webhookd.HaltEvent`
 func NewLambdaDispatcher(ctx context.Context, uri string) (webhookd.WebhookDispatcher, error) {
 
 	u, err := url.Parse(uri)
@@ -73,15 +87,37 @@ func NewLambdaDispatcher(ctx context.Context, uri string) (webhookd.WebhookDispa
 		return nil, fmt.Errorf("Invalid invocation_type parameter")
 	}
 
-	check_preamble := false
-	
 	lambda_svc := lambda.New(lambda_sess)
 
 	d := LambdaDispatcher{
 		LambdaFunction:  lambda_function,
 		LambdaService:   lambda_svc,
 		invocation_type: invocation_type,
-		check_preamble: check_preamble,
+	}
+
+	q_halt_on_message := q.Get("halt_on_message")
+	q_halt_on_author := q.Get("halt_on_author")
+
+	if q_halt_on_message != "" {
+
+		r, err := regexp.Compile(q_halt_on_message)
+
+		if err != nil {
+			return nil, fmt.Errorf("Failed to parse ?halt_on_message= parameter, %w", err)
+		}
+
+		d.halt_on_message = r
+	}
+
+	if q_halt_on_author != "" {
+
+		r, err := regexp.Compile(q_halt_on_author)
+
+		if err != nil {
+			return nil, fmt.Errorf("Failed to parse ?halt_on_author= parameter, %w", err)
+		}
+
+		d.halt_on_author = r
 	}
 
 	return &d, nil
@@ -97,10 +133,54 @@ func (d *LambdaDispatcher) Dispatch(ctx context.Context, body []byte) *webhookd.
 		// pass
 	}
 
-	if d.check_preamble {
+	if d.halt_on_message != nil || d.halt_on_author != nil {
 
+		var buf bytes.Buffer
+		wr := bufio.NewWriter(&buf)
+
+		var message string
+		var author string
+
+		br := bytes.NewReader(body)
+		scanner := bufio.NewScanner(br)
+
+		for scanner.Scan() {
+
+			ln := scanner.Text()
+			m := preamble_re.FindStringSubmatch(ln)
+
+			if len(m) != 3 {
+
+				if strings.HasPrefix(ln, "#") {
+					log.Printf("Unhandled comment '%s'", ln)
+					continue
+				}
+
+				wr.WriteString(ln)
+			}
+
+			switch m[1] {
+			case "message":
+				message = m[2]
+			case "author":
+				author = m[2]
+			default:
+				log.Printf("Unhandled preamble '%s'", ln)
+			}
+		}
+
+		if d.halt_on_message != nil && d.halt_on_message.MatchString(message) {
+			return &webhookd.WebhookError{Code: webhookd.HaltEvent, Message: "Halt"}
+		}
+
+		if d.halt_on_author != nil && d.halt_on_author.MatchString(author) {
+			return &webhookd.WebhookError{Code: webhookd.HaltEvent, Message: "Halt"}
+		}
+
+		wr.Flush()
+		body = buf.Bytes()
 	}
-	
+
 	// I don't understand why I need to base64 encode this...
 	// (20200526/thisisaaronland)
 
