@@ -133,52 +133,10 @@ func (d *LambdaDispatcher) Dispatch(ctx context.Context, body []byte) *webhookd.
 		// pass
 	}
 
-	if d.halt_on_message != nil || d.halt_on_author != nil {
+	body, err := d.processBody(ctx, body)
 
-		var buf bytes.Buffer
-		wr := bufio.NewWriter(&buf)
-
-		var message string
-		var author string
-
-		br := bytes.NewReader(body)
-		scanner := bufio.NewScanner(br)
-
-		for scanner.Scan() {
-
-			ln := scanner.Text()
-			m := preamble_re.FindStringSubmatch(ln)
-
-			if len(m) != 3 {
-
-				if strings.HasPrefix(ln, "#") {
-					log.Printf("Unhandled comment '%s'", ln)
-					continue
-				}
-
-				wr.WriteString(ln)
-			}
-
-			switch m[1] {
-			case "message":
-				message = m[2]
-			case "author":
-				author = m[2]
-			default:
-				log.Printf("Unhandled preamble '%s'", ln)
-			}
-		}
-
-		if d.halt_on_message != nil && d.halt_on_message.MatchString(message) {
-			return &webhookd.WebhookError{Code: webhookd.HaltEvent, Message: "Halt"}
-		}
-
-		if d.halt_on_author != nil && d.halt_on_author.MatchString(author) {
-			return &webhookd.WebhookError{Code: webhookd.HaltEvent, Message: "Halt"}
-		}
-
-		wr.Flush()
-		body = buf.Bytes()
+	if err != nil {
+		return err.(*webhookd.WebhookError)
 	}
 
 	// I don't understand why I need to base64 encode this...
@@ -205,4 +163,61 @@ func (d *LambdaDispatcher) Dispatch(ctx context.Context, body []byte) *webhookd.
 	}
 
 	return nil
+}
+
+func (d *LambdaDispatcher) processBody(ctx context.Context, body []byte) ([]byte, error) {
+
+	if d.halt_on_message == nil && d.halt_on_author == nil {
+		return body, nil
+	}
+
+	var buf bytes.Buffer
+	wr := bufio.NewWriter(&buf)
+
+	var message string
+	var author string
+
+	br := bytes.NewReader(body)
+	scanner := bufio.NewScanner(br)
+
+	for scanner.Scan() {
+
+		ln := scanner.Text()
+		m := preamble_re.FindStringSubmatch(ln)
+
+		if len(m) != 3 {
+
+			if strings.HasPrefix(ln, "#") {
+				log.Printf("Unhandled comment '%s'", ln)
+			}
+
+			wr.WriteString(ln)
+			continue
+		}
+
+		switch m[1] {
+		case "message":
+
+			message = m[2]
+
+			if d.halt_on_message != nil && d.halt_on_message.MatchString(message) {
+				return nil, &webhookd.WebhookError{Code: webhookd.HaltEvent, Message: "Halt"}
+			}
+
+		case "author":
+			author = m[2]
+
+			if d.halt_on_author != nil && d.halt_on_author.MatchString(author) {
+				return nil, &webhookd.WebhookError{Code: webhookd.HaltEvent, Message: "Halt"}
+			}
+
+		default:
+			log.Printf("Unhandled preamble '%s'", ln)
+		}
+	}
+
+	wr.Flush()
+	body = buf.Bytes()
+
+	return body, nil
 }
