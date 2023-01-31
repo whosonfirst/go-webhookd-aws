@@ -3,8 +3,8 @@ module github.com/whosonfirst/go-webhookd-aws/v2
 go 1.18
 
 require (
-	github.com/aaronland/go-aws-session v0.0.6
-	github.com/aws/aws-sdk-go v1.44.149
+	github.com/aaronland/go-aws-session v0.1.0
+	github.com/aws/aws-sdk-go v1.44.191
 	github.com/sfomuseum/go-flags v0.10.0
 	github.com/whosonfirst/go-webhookd/v3 v3.2.0
 )
@@ -13,7 +13,7 @@ require (
 	github.com/aaronland/go-chicken v0.2.2 // indirect
 	github.com/aaronland/go-http-server v1.0.0 // indirect
 	github.com/aaronland/go-roster v1.0.0 // indirect
-	github.com/aaronland/go-string v0.1.2 // indirect
+	github.com/aaronland/go-string v1.0.0 // indirect
 	github.com/aaronland/go-ucd/v13 v13.0.0 // indirect
 	github.com/akrylysov/algnhsa v0.12.1 // indirect
 	github.com/aws/aws-lambda-go v1.13.3 // indirect
