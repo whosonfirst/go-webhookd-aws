@@ -12,7 +12,7 @@ Before you begin please [read the go-webhookd documentation](https://github.com/
 
 ```
 import (
-	_ "github.com/go-webhookd-aws/v2"
+	_ "github.com/go-webhookd-aws/v4"
 )
 ```
 
@@ -23,23 +23,41 @@ import (
 The `Lambda` dispatcher will send messages to an Amazon Web Services (ASW) [Lambda function](#). It is defined as a URI string in the form of:
 
 ```
-lambda://{FUNCTION}?dsn={DSN}&invocation_type={INVOCATION_TYPE}
+lambda://{FUNCTION}?region={AWS_REGIONS}&credentials={AWS_CREDENTIALS}&invocation_type={INVOCATION_TYPE}
 ```
+
+Where `{FUNCTION}` is the name of the AWS Lambda function to invoke. Valid query parameters are:
 
 #### Properties
 
 | Name | Value | Description | Required |
 | --- | --- | --- | --- |
-| dsn | string | A valid `aaronland/go-aws-session` DSN string. | yes |
-| function | string | The name of your Lambda function. | yes |
+| region | string | The AWS region where the Lambda function is stored. | yes |
+| credentials | string | The AWS credentials string used to invoke the Lambda function. | yes |
 | invocation_type | string | A valid AWS Lambda `Invocation Type` string. | no |
 | halt_on_message | string | An optional regular expression that will be compared to the commit message; if it matches the transformer will return an error with code `webhookd.HaltEvent` | no |
 | halt_on_author | string | An optional regular expression that will be compared to the commit author; if it matches the transformer will return an error with code `webhookd.HaltEvent` | no |
 
-## Important
 
-`whosonfirst/go-webhookd-aws/v2` and higher is backwards incompatible with `whosonfirst/go-webhookd-aws` "v1". Importantly the ability to run a `webhookd` server _as_ an AWS Lambda has been merged back in to `whosonfirst/go-webhookd/v2` (and higher). This package only manages AWS specific dispatchers now.
+#### Credentials strings
 
+Credentials for URIs are defined as string labels. They are:
+
+| Label | Description |
+| --- | --- |
+| `anon:` | Empty or anonymous credentials. |
+| `env:` | Read credentials from AWS defined environment variables. |
+| `iam:` | Assume AWS IAM credentials are in effect. |
+| `iam:{REGION}:{ARN}` | Assume AWS IAM credentials are in effect after assuming the IAM Role defined by `{ARN}` (in `{REGION}`). |
+| `sts:{ARN}` | Assume the role defined by `{ARN}` using STS credentials. |
+| `{AWS_PROFILE_NAME}` | This this profile from the default AWS credentials location. |
+| `{AWS_CREDENTIALS_PATH}:{AWS_PROFILE_NAME}` | This this profile from a user-defined AWS credentials location. |
+
+For example:
+
+```
+aws:///us-east-1?credentials=iam:
+```
 
 ## See also
 

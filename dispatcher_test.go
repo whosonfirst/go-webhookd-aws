@@ -82,7 +82,7 @@ func TestProcessBodyWithMessage(t *testing.T) {
 
 	q := u.Query()
 	q.Set("region", "us-east-1")
-	q.Set("credentials", "fixtures/credentials:example")	
+	q.Set("credentials", "fixtures/credentials:example")
 	q.Set("invocation_type", "DryRun")
 
 	q.Set("halt_on_message", "testing")

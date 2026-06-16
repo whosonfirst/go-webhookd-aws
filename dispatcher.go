@@ -7,7 +7,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"log"
+	"log/slog"
 	"net/url"
 	"regexp"
 	"strings"
@@ -54,7 +54,8 @@ type LambdaDispatcher struct {
 //	lambda://{FUNCTION_NAME}?{PARAMETERS}
 //
 // Where {PARAMETERS} are:
-// * `dsn=` A valid `aaronland/go-aws-session` string used to create an AWS session instance.
+// * `region=` The AWS region where the Lambda function is stored.
+// * `credentials=` The AWS credentials string used to invoke the Lambda function.
 // * `invocation_type=` The name of AWS Lambda invocation type. Valid options are: RequestResponse, Event, DryRun.
 // * `?halt_on_message` An optional regular expression that will be compared to the commit message; if it matches the transformer will return an error with code `webhookd.HaltEvent`
 // * `?halt_on_author` An optional regular expression that will be compared to the commit author; if it matches the transformer will return an error with code `webhookd.HaltEvent`
@@ -200,10 +201,13 @@ func (d *LambdaDispatcher) processBody(ctx context.Context, body []byte) ([]byte
 		ln := scanner.Text()
 		m := preamble_re.FindStringSubmatch(ln)
 
+		logger := slog.Default()
+		logger = logger.With("line", ln)
+
 		if len(m) != 3 {
 
 			if strings.HasPrefix(ln, "#") {
-				log.Printf("Unhandled comment '%s'", ln)
+				logger.Debug("Unhandled comment")
 			}
 
 			wr.WriteString(ln)
@@ -227,7 +231,7 @@ func (d *LambdaDispatcher) processBody(ctx context.Context, body []byte) ([]byte
 			}
 
 		default:
-			log.Printf("Unhandled preamble '%s'", ln)
+			logger.Debug("Unhandler preamble")
 		}
 	}
 
