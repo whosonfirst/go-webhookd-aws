@@ -12,11 +12,12 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/aaronland/go-aws-session"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/lambda"
-	"github.com/whosonfirst/go-webhookd/v3"
-	"github.com/whosonfirst/go-webhookd/v3/dispatcher"
+	"github.com/aaronland/go-aws/v3/auth"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/lambda"
+	"github.com/aws/aws-sdk-go-v2/service/lambda/types"
+	"github.com/whosonfirst/go-webhookd/v4"
+	"github.com/whosonfirst/go-webhookd/v4/dispatcher"
 )
 
 var preamble_re *regexp.Regexp
@@ -38,10 +39,10 @@ type LambdaDispatcher struct {
 	webhookd.WebhookDispatcher
 	// LambdaFunction is the name of the Lambda function to invoke.
 	LambdaFunction string
-	// LambdaService is `aws-sdk-go/service/lambda.Lambda` instance use to invoke a Lambda function.
-	LambdaService *lambda.Lambda
-	// invocation_type is the name of AWS Lambda invocation type.
-	invocation_type string
+	// LambdaClient is `aws-sdk-go/service/lambda.Client` instance use to invoke a Lambda function.
+	LambdaClient *lambda.Client
+	// invocation_type is the AWS Lambda invocation type.
+	invocation_type types.InvocationType
 	// An optional regular expression that will be compared to the commit message; if it matches the dispatcher will return an error with code `webhookd.HaltEvent`
 	halt_on_message *regexp.Regexp
 	// An optional regular expression that will be compared to the commit author; if it matches the dispatcher will return an error with code `webhookd.HaltEvent`
@@ -69,31 +70,44 @@ func NewLambdaDispatcher(ctx context.Context, uri string) (webhookd.WebhookDispa
 
 	q := u.Query()
 
-	lambda_dsn := q.Get("dsn")
+	region := q.Get("region")
+	creds := q.Get("credentials")
 
-	lambda_sess, err := session.NewSessionWithDSN(lambda_dsn)
+	aws_q := url.Values{}
+	aws_q.Set("region", region)
+	aws_q.Set("credentials", creds)
+
+	aws_u := url.URL{}
+	aws_u.Scheme = "aws"
+	aws_u.RawQuery = aws_q.Encode()
+
+	cfg, err := auth.NewConfig(ctx, aws_u.String())
 
 	if err != nil {
-		return nil, fmt.Errorf("Failed to create new AWS session, %w", err)
+		return nil, fmt.Errorf("Failed to create new AWS config, %w", err)
 	}
 
 	invocation_type := q.Get("invocation_type")
 
-	switch invocation_type {
-	case "":
-		invocation_type = "RequestResponse"
-	case "RequestResponse", "Event", "DryRun":
-		// pass
+	var inv_type types.InvocationType
+
+	switch strings.ToLower(invocation_type) {
+	case "event":
+		inv_type = types.InvocationTypeEvent
+	case "requestresponse":
+		inv_type = types.InvocationTypeRequestResponse
+	case "dryrun":
+		inv_type = types.InvocationTypeDryRun
 	default:
 		return nil, fmt.Errorf("Invalid invocation_type parameter")
 	}
 
-	lambda_svc := lambda.New(lambda_sess)
+	lambda_svc := lambda.NewFromConfig(cfg)
 
 	d := LambdaDispatcher{
 		LambdaFunction:  lambda_function,
-		LambdaService:   lambda_svc,
-		invocation_type: invocation_type,
+		LambdaClient:    lambda_svc,
+		invocation_type: inv_type,
 	}
 
 	q_halt_on_message := q.Get("halt_on_message")
@@ -154,10 +168,10 @@ func (d *LambdaDispatcher) Dispatch(ctx context.Context, body []byte) *webhookd.
 	input := &lambda.InvokeInput{
 		FunctionName:   aws.String(d.LambdaFunction),
 		Payload:        payload,
-		InvocationType: aws.String(d.invocation_type),
+		InvocationType: d.invocation_type,
 	}
 
-	_, err = d.LambdaService.Invoke(input)
+	_, err = d.LambdaClient.Invoke(ctx, input)
 
 	if err != nil {
 		return &webhookd.WebhookError{Code: 999, Message: err.Error()}
